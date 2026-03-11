@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # 可选，消除 Node.js 警告
     steps:
       - uses: actions/checkout@v4
 
@@ -22,6 +24,19 @@ jobs:
           sudo apt install -y git autoconf automake libtool pkg-config build-essential \
             libffi-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev \
             libsqlite3-dev libncurses5-dev libncursesw5-dev
+
+      # ---------- 新增步骤：安装 Android SDK 并接受许可证 ----------
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 9477386   # 最新版本号，可根据需要调整
+          build-tools-version: 34.0.0       # 指定 build-tools 版本（与你的 android.api 匹配）
+          platforms-version: android-34      # 指定平台版本
+          ndk-version: 25.2.9519653          # NDK 版本，buildozer 通常使用 r25b
+
+      # 可选：手动接受所有许可证（setup-android 通常会自动处理）
+      # - name: Accept Android SDK licenses
+      #   run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
       - name: Install buildozer
         run: pip install --user buildozer cython
