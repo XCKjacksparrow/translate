@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # 可选，消除 Node.js 警告
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # 消除 Node.js 警告
     steps:
       - uses: actions/checkout@v4
 
@@ -34,11 +34,9 @@ jobs:
       - name: Install buildozer
         run: pip install --user buildozer cython
 
-      # 关键：设置环境变量自动接受 Android SDK 许可证
+      # 使用 --accept-sdk-license 自动接受所有 Android SDK 许可证
       - name: Build with buildozer
-        run: buildozer android debug
-        env:
-          ANDROID_ACCEPT_LICENSES: true
+        run: buildozer android debug --accept-sdk-license
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
