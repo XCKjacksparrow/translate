@@ -18,11 +18,12 @@ jobs:
         with:
           python-version: '3.8'
 
-      - name: Set up Java 8
+      # 改用 Java 11（sdkmanager 需要）
+      - name: Set up Java 11
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '8'
+          java-version: '11'
 
       - name: Install system dependencies
         run: |
@@ -39,10 +40,13 @@ jobs:
           platforms-version: android-34
           ndk-version: 25.2.9519653
 
-      # 自动接受所有 Android SDK 许可证
-      - name: Accept Android SDK licenses
+      # 为 Java 11 添加 JAXB 模块支持
+      - name: Accept Android SDK licenses (with JAXB fix)
         run: |
+          export JAVA_TOOL_OPTIONS="--add-modules java.xml.bind"
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_11_arm64 }}  # 使用 setup-java 提供的变量
 
       - name: Link Android SDK to buildozer expected path
         run: |
@@ -52,12 +56,14 @@ jobs:
       - name: Install buildozer
         run: pip install --user buildozer cython
 
+      # 构建时也需要 JAXB 支持
       - name: Build with buildozer
         run: |
           export ANDROIDSDK="$ANDROID_HOME"
           export ANDROIDNDK="$ANDROID_HOME/ndk/25.2.9519653"
           export ANDROIDAPI=34
           export ANDROIDMINAPI=21
+          export JAVA_TOOL_OPTIONS="--add-modules java.xml.bind"
           buildozer android debug
 
       - name: Upload APK
