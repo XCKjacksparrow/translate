@@ -18,6 +18,13 @@ jobs:
         with:
           python-version: '3.8'
 
+      # 安装 Java 8（sdkmanager 必需）
+      - name: Set up Java 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+
       - name: Install system dependencies
         run: |
           sudo apt update
@@ -33,7 +40,6 @@ jobs:
           platforms-version: android-34
           ndk-version: 25.2.9519653
 
-      # 将整个 SDK 链接到 buildozer 默认的搜索路径
       - name: Link Android SDK to buildozer expected path
         run: |
           mkdir -p /home/runner/.buildozer/android/platform
@@ -42,7 +48,6 @@ jobs:
       - name: Install buildozer
         run: pip install --user buildozer cython
 
-      # 设置环境变量并构建（确保 buildozer 使用正确的 SDK/NDK）
       - name: Build with buildozer
         run: |
           export ANDROIDSDK="$ANDROID_HOME"
