@@ -3,7 +3,7 @@ name: Build Android APK
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:
 
 jobs:
   build:
@@ -25,18 +25,22 @@ jobs:
             libffi-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev \
             libsqlite3-dev libncurses5-dev libncursesw5-dev
 
-      # ---------- 新增步骤：安装 Android SDK 并接受许可证 ----------
+      # 安装 Android SDK 和 NDK
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          cmdline-tools-version: 9477386   # 最新版本号，可根据需要调整
-          build-tools-version: 34.0.0       # 指定 build-tools 版本（与你的 android.api 匹配）
-          platforms-version: android-34      # 指定平台版本
-          ndk-version: 25.2.9519653          # NDK 版本，buildozer 通常使用 r25b
+          cmdline-tools-version: 9477386
+          build-tools-version: 34.0.0
+          platforms-version: android-34
+          ndk-version: 25.2.9519653   # NDK r25b 对应的版本号
 
-      # 可选：手动接受所有许可证（setup-android 通常会自动处理）
-      # - name: Accept Android SDK licenses
-      #   run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+      # 为 buildozer 设置环境变量，指定 SDK 和 NDK 路径
+      - name: Set buildozer environment
+        run: |
+          echo "ANDROIDSDK=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROIDNDK=$ANDROID_HOME/ndk/25.2.9519653" >> $GITHUB_ENV
+          echo "ANDROIDAPI=34" >> $GITHUB_ENV          # 与 platforms-version 一致
+          echo "ANDROIDMINAPI=21" >> $GITHUB_ENV       # 可根据你的需求调整
 
       - name: Install buildozer
         run: pip install --user buildozer cython
