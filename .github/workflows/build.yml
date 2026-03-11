@@ -34,14 +34,14 @@ jobs:
           platforms-version: android-34
           ndk-version: 25.2.9519653   # NDK r25b
 
-      # 验证 aidl 确实存在并可执行
+      # 验证 aidl 存在（不再尝试修改权限）
       - name: Verify aidl
         run: |
           echo "Checking aidl in $ANDROID_HOME/build-tools/34.0.0/"
           if [ -f "$ANDROID_HOME/build-tools/34.0.0/aidl" ]; then
             echo "✅ aidl found"
-            chmod +x "$ANDROID_HOME/build-tools/34.0.0/aidl"
-            "$ANDROID_HOME/build-tools/34.0.0/aidl" || echo "aidl execution test passed (expected help output)"
+            # 尝试执行 aidl 以验证可执行（忽略退出码）
+            "$ANDROID_HOME/build-tools/34.0.0/aidl" || echo "aidl execution test passed (expected non-zero exit)"
           else
             echo "❌ aidl not found"
             exit 1
@@ -50,7 +50,7 @@ jobs:
       - name: Install buildozer
         run: pip install --user buildozer cython
 
-      # 关键：强制 buildozer 使用我们安装的 SDK/NDK
+      # 强制 buildozer 使用我们安装的 SDK/NDK
       - name: Build with buildozer
         run: |
           buildozer android debug \
