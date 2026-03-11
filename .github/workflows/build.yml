@@ -34,35 +34,34 @@ jobs:
           platforms-version: android-34
           ndk-version: 25.2.9519653   # NDK r25b
 
-      # 验证 aidl 存在（不再尝试修改权限）
+      # 验证 aidl 存在
       - name: Verify aidl
         run: |
           echo "Checking aidl in $ANDROID_HOME/build-tools/34.0.0/"
           if [ -f "$ANDROID_HOME/build-tools/34.0.0/aidl" ]; then
             echo "✅ aidl found"
-            # 尝试执行 aidl 以验证可执行（忽略退出码）
-            "$ANDROID_HOME/build-tools/34.0.0/aidl" || echo "aidl execution test passed (expected non-zero exit)"
           else
             echo "❌ aidl not found"
             exit 1
           fi
 
+      # 创建 buildozer 期望的目录结构，并将 aidl 软链接过去
+      - name: Link aidl to buildozer expected path
+        run: |
+          mkdir -p /home/runner/.buildozer/android/platform/android-sdk/build-tools
+          ln -s "$ANDROID_HOME/build-tools/34.0.0" /home/runner/.buildozer/android/platform/android-sdk/build-tools/34.0.0
+
       - name: Install buildozer
         run: pip install --user buildozer cython
 
-      # 强制 buildozer 使用我们安装的 SDK/NDK
+      # 设置环境变量，确保 buildozer 使用正确的 SDK/NDK
       - name: Build with buildozer
         run: |
-          buildozer android debug \
-            --sdk-path "$ANDROID_HOME" \
-            --ndk-path "$ANDROID_HOME/ndk/25.2.9519653" \
-            --android-api 34 \
-            --android-minapi 21
-        env:
-          ANDROIDSDK: ${{ env.ANDROID_HOME }}
-          ANDROIDNDK: ${{ env.ANDROID_HOME }}/ndk/25.2.9519653
-          ANDROIDAPI: 34
-          ANDROIDMINAPI: 21
+          export ANDROIDSDK="$ANDROID_HOME"
+          export ANDROIDNDK="$ANDROID_HOME/ndk/25.2.9519653"
+          export ANDROIDAPI=34
+          export ANDROIDMINAPI=21
+          buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
