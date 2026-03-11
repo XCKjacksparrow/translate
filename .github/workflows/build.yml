@@ -34,8 +34,11 @@ jobs:
       - name: Install buildozer
         run: pip install --user buildozer cython
 
+      # 关键：设置环境变量自动接受 Android SDK 许可证
       - name: Build with buildozer
         run: buildozer android debug
+        env:
+          ANDROID_ACCEPT_LICENSES: true
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
