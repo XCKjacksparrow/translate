@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # 消除 Node.js 警告
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
 
@@ -25,36 +25,24 @@ jobs:
             libffi-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev \
             libsqlite3-dev libncurses5-dev libncursesw5-dev
 
-      # 安装 Android SDK 和 NDK
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
           cmdline-tools-version: 9477386
           build-tools-version: 34.0.0
           platforms-version: android-34
-          ndk-version: 25.2.9519653   # NDK r25b
+          ndk-version: 25.2.9519653
 
-      # 验证 aidl 存在
-      - name: Verify aidl
+      # 将整个 SDK 链接到 buildozer 默认的搜索路径
+      - name: Link Android SDK to buildozer expected path
         run: |
-          echo "Checking aidl in $ANDROID_HOME/build-tools/34.0.0/"
-          if [ -f "$ANDROID_HOME/build-tools/34.0.0/aidl" ]; then
-            echo "✅ aidl found"
-          else
-            echo "❌ aidl not found"
-            exit 1
-          fi
-
-      # 创建 buildozer 期望的目录结构，并将 aidl 软链接过去
-      - name: Link aidl to buildozer expected path
-        run: |
-          mkdir -p /home/runner/.buildozer/android/platform/android-sdk/build-tools
-          ln -s "$ANDROID_HOME/build-tools/34.0.0" /home/runner/.buildozer/android/platform/android-sdk/build-tools/34.0.0
+          mkdir -p /home/runner/.buildozer/android/platform
+          ln -sfn "$ANDROID_HOME" /home/runner/.buildozer/android/platform/android-sdk
 
       - name: Install buildozer
         run: pip install --user buildozer cython
 
-      # 设置环境变量，确保 buildozer 使用正确的 SDK/NDK
+      # 设置环境变量并构建（确保 buildozer 使用正确的 SDK/NDK）
       - name: Build with buildozer
         run: |
           export ANDROIDSDK="$ANDROID_HOME"
