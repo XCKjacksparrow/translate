@@ -39,18 +39,6 @@ jobs:
           platforms-version: android-34
           ndk-version: 25.2.9519653
 
-      # 修复 sdkmanager 在 Java 11 下的 JAXB 缺失问题
-      - name: Fix sdkmanager for Java 11
-        run: |
-          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          if [ -f "$SDKMANAGER" ]; then
-            echo "Patching $SDKMANAGER to add JAXB module"
-            sed -i 's/^\(\s*\)exec "\$\{JAVA_EXE\}" /&--add-modules java.xml.bind /' "$SDKMANAGER"
-          else
-            echo "sdkmanager not found at $SDKMANAGER"
-            exit 1
-          fi
-
       - name: Link Android SDK to buildozer expected path
         run: |
           mkdir -p /home/runner/.buildozer/android/platform
@@ -58,6 +46,10 @@ jobs:
 
       - name: Install buildozer
         run: pip install --user buildozer cython
+
+      # 通过环境变量为 Java 添加 JAXB 模块
+      - name: Set Java options for JAXB
+        run: echo "JAVA_TOOL_OPTIONS=--add-modules java.xml.bind" >> $GITHUB_ENV
 
       - name: Build with buildozer
         run: |
