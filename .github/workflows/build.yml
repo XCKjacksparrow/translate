@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # 可选，消除 Node.js 警告
     steps:
       - uses: actions/checkout@v4
 
@@ -18,11 +18,11 @@ jobs:
         with:
           python-version: '3.8'
 
-      - name: Set up Java 11
+      - name: Set up Java 8
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '11'
+          java-version: '8'
 
       - name: Install system dependencies
         run: |
@@ -31,31 +31,11 @@ jobs:
             libffi-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev \
             libsqlite3-dev libncurses5-dev libncursesw5-dev
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          cmdline-tools-version: 9477386
-          build-tools-version: 34.0.0
-          platforms-version: android-34
-          ndk-version: 25.2.9519653
-
-      - name: Link Android SDK to buildozer expected path
-        run: |
-          mkdir -p /home/runner/.buildozer/android/platform
-          ln -sfn "$ANDROID_HOME" /home/runner/.buildozer/android/platform/android-sdk
-
       - name: Install buildozer
         run: pip install --user buildozer cython
 
-      # 构建时设置 JAVA_TOOL_OPTIONS，仅作用于 buildozer 及其子进程
       - name: Build with buildozer
-        run: |
-          export ANDROIDSDK="$ANDROID_HOME"
-          export ANDROIDNDK="$ANDROID_HOME/ndk/25.2.9519653"
-          export ANDROIDAPI=34
-          export ANDROIDMINAPI=21
-          export JAVA_TOOL_OPTIONS="--add-modules java.xml.bind"
-          buildozer android debug
+        run: buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
