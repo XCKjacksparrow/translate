@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # 消除 Node.js 警告
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
 
@@ -31,12 +31,34 @@ jobs:
             libffi-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev \
             libsqlite3-dev libncurses5-dev libncursesw5-dev
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 9477386
+          build-tools-version: 34.0.0
+          platforms-version: android-34
+          ndk-version: 25.2.9519653
+
+      # 自动接受所有 Android SDK 许可证
+      - name: Accept Android SDK licenses
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+
+      - name: Link Android SDK to buildozer expected path
+        run: |
+          mkdir -p /home/runner/.buildozer/android/platform
+          ln -sfn "$ANDROID_HOME" /home/runner/.buildozer/android/platform/android-sdk
+
       - name: Install buildozer
         run: pip install --user buildozer cython
 
-      # 使用 --accept-sdk-license 自动接受所有 Android SDK 许可证
       - name: Build with buildozer
-        run: buildozer android debug --accept-sdk-license
+        run: |
+          export ANDROIDSDK="$ANDROID_HOME"
+          export ANDROIDNDK="$ANDROID_HOME/ndk/25.2.9519653"
+          export ANDROIDAPI=34
+          export ANDROIDMINAPI=21
+          buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
