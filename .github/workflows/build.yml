@@ -47,16 +47,14 @@ jobs:
       - name: Install buildozer
         run: pip install --user buildozer cython
 
-      # 通过环境变量为 Java 添加 JAXB 模块
-      - name: Set Java options for JAXB
-        run: echo "JAVA_TOOL_OPTIONS=--add-modules java.xml.bind" >> $GITHUB_ENV
-
+      # 构建时设置 JAVA_TOOL_OPTIONS，仅作用于 buildozer 及其子进程
       - name: Build with buildozer
         run: |
           export ANDROIDSDK="$ANDROID_HOME"
           export ANDROIDNDK="$ANDROID_HOME/ndk/25.2.9519653"
           export ANDROIDAPI=34
           export ANDROIDMINAPI=21
+          export JAVA_TOOL_OPTIONS="--add-modules java.xml.bind"
           buildozer android debug
 
       - name: Upload APK
